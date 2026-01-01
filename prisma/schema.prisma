@@ -1,0 +1,50 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int     @default(autoincrement()) @map("id")
+  user_id   String  @id @unique @default(cuid())
+  firstName String
+  lastName  String
+  email     String  @unique
+  password  String?
+
+  provider Provider @default(local)
+  googleId String?
+
+  gender    Gender    @default(male)
+  phone     String?
+  role      String    @default("USER")
+  confirm   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  profile   Profile?
+
+  @@map("User")
+}
+
+model Profile {
+  id     Int     @id @default(autoincrement()) @map("id")
+  avatar String?
+  cover  String?
+  bio    String?
+
+  user_id String @unique @default(cuid()) @map("user_id")
+  user    User   @relation(fields: [user_id], references: [user_id])
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum Provider {
+  google
+  local
+}

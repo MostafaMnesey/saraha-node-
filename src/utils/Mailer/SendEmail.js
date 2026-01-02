@@ -2,6 +2,7 @@ import { transporter } from "./MailerClient.js";
 import { mailTemp } from "./MailTemp.js";
 
 export const sendEmail = async ({ to, subject, text, otp }) => {
+  
   const html = mailTemp({ otp });
   try {
     const info = await transporter.sendMail({

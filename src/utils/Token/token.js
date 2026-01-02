@@ -11,11 +11,18 @@ export const generateToken = ({ user, tokenType }) => {
   );
 };
 
-export const verifyToken = ({ token, tokenType }) => {
+export const verifyToken = ({ token, tokenType = tokenTypeEnum.access }) => {
+  console.log(token);
+  
   return jwt.verify(
     token,
     tokenType === "access"
       ? process.env.JWT_SECRET_ACCESS
       : process.env.JWT_SECRET_REFRESH
   );
+};
+
+const tokenTypeEnum = {
+  access: "access",
+  refresh: "refresh",
 };

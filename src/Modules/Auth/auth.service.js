@@ -1,7 +1,7 @@
-import * as db from "../../dataBase/dbService.js";
 import { googleVerify } from "../../utils/GoogleClient/index.js";
 import sendEmailEvent from "../../utils/Mailer/sendEmailEvent.js";
 import { redis } from "../../utils/Radis/Connection.js";
+import * as db from "../../dataBase/dbService.js";
 
 import { asyncHandler, successResponse } from "../../utils/response.js";
 import {
@@ -32,10 +32,12 @@ export const login = asyncHandler(async (req, res, next) => {
   if (!matchedPassword) {
     return next(new Error("Invalid credentials", { cause: 401 }));
   }
-  /*  if (!user.confirm) {
-    return next(new Error("User Not Confirm", { cause: 401 }));
+  if (!user.confirm) {
+    return next(
+      new Error("User Not Confirm Please Verify Your Account", { cause: 401 })
+    );
   }
- */
+
   const decryptedPhone = decryptText({ text: user.phone });
   user.phone = decryptedPhone;
   const accessToken = generateToken({ user, tokenType: "access" });
@@ -64,10 +66,15 @@ export const register = asyncHandler(async (req, res, next) => {
   const encryptedPhone = encryptText({ text: phone });
   const otp = generateOtp();
   const hashedOtp = hashPassword({ password: otp });
-  await redis.set(email, hashedOtp);
-  await redis.expire(email, 60 * 10);
+  await redis.set(`${email}_otp_register`, hashedOtp);
+  await redis.expire(`${email}_otp_register`, 60 * 10);
 
-  sendEmailEvent.emit("sendEmail", { email, otp });
+  const mail = sendEmailEvent.emit("sendEmail", { email, otp });
+  if (!mail) {
+    return next(
+      new Error("Failed to send email, please try again", { cause: 500 })
+    );
+  }
   const user = await db.create({
     model: "User",
     data: {
@@ -94,8 +101,8 @@ export const forgetPassword = asyncHandler(async (req, res, next) => {
   }
   const otp = generateOtp();
   const hashedOtp = hashPassword({ password: otp });
-  await redis.set(email, hashedOtp);
-  await redis.expire(email, 60 * 10);
+  await redis.set(`${email}_otp_forget`, hashedOtp);
+  await redis.expire(`${email}_otp_forget`, 60 * 10);
 
   sendEmailEvent.emit("sendEmail", { email, otp });
 
@@ -111,7 +118,7 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
   if (!checkuser) {
     return next(new Error("User Not Found", { cause: 404 }));
   }
-  const hasedOtp = await redis.get(email);
+  const hasedOtp = await redis.get(`${email}_otp_forget`);
 
   const comparedPassword = comparePassword({ password: otp, hash: hasedOtp });
   if (!comparedPassword) {
@@ -124,7 +131,7 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     where: { email },
     data: { password: hashedPassword },
   });
-  await redis.del(email);
+  await redis.del(`${email}_otp_forget`);
 
   return successResponse({
     res,
@@ -157,7 +164,6 @@ export const refresh = asyncHandler(async (req, res, next) => {
     sameSite: "strict",
     maxAge: 60 * 60 * 1000,
   });
-  console.log(cookie);
 
   return successResponse({
     res,
@@ -167,8 +173,7 @@ export const refresh = asyncHandler(async (req, res, next) => {
 });
 export const verifyCode = asyncHandler(async (req, res, next) => {
   const { email, otp } = req.body;
-  const hasedOtp = await redis.get(email);
-  console.log(hasedOtp);
+  const hasedOtp = await redis.get(`${email}_otp_register`);
 
   const comparedPassword = comparePassword({ password: otp, hash: hasedOtp });
   if (!comparedPassword) {
@@ -183,7 +188,7 @@ export const verifyCode = asyncHandler(async (req, res, next) => {
 });
 export const verifyAccount = asyncHandler(async (req, res, next) => {
   const { email, otp } = req.body;
-  const hasedOtp = await redis.get(email);
+  const hasedOtp = await redis.get(`${email}_otp_register`);
 
   const comparedPassword = comparePassword({ password: otp, hash: hasedOtp });
   if (!comparedPassword) {
@@ -196,13 +201,13 @@ export const verifyAccount = asyncHandler(async (req, res, next) => {
   if (!matchedUser) {
     return next(new Error("User Not Found", { cause: 404 }));
   }
-  await redis.del(email);
+  await redis.del(`${email}_otp_register`);
   const user = await db.updateOne({
     model: "User",
     where: { email },
     data: { confirm: new Date().toISOString() },
   });
-  console.log(user);
+
   if (!user) {
     return next(new Error("User Not Found", { cause: 404 }));
   }
@@ -218,7 +223,7 @@ export const googleSignUp = asyncHandler(async (req, res, next) => {
   if (!verify) {
     return next(new Error("Invalid Token", { cause: 401 }));
   }
-  console.log(verify);
+
   if (!verify.email_verified) {
     return next(new Error("Email Not Verified", { cause: 401 }));
   }

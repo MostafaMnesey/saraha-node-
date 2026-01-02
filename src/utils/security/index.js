@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import CryptoJS from "crypto-js";
 export const hashPassword = ({ password, salt = process.env.SALT }) => {
-  console.log(password, salt);
+  
   return bcrypt.hashSync(password, Number(salt));
 };
 export const comparePassword = ({ password, hash }) => {

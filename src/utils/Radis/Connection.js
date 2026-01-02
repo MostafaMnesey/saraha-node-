@@ -13,8 +13,6 @@ redis.on("error", (err) => console.log("❌ Redis Client Error:", err.message));
 
 export const redisConnection = async () => {
   if (!redis.isOpen) {
-    console.log(redis.isOpen);
-
     await redis.connect();
   }
 };

@@ -8,35 +8,58 @@ datasource db {
 }
 
 model User {
-  id        Int     @default(autoincrement()) @map("id")
-  user_id   String  @id @unique @default(cuid())
-  firstName String
-  lastName  String
-  email     String  @unique
-  password  String?
-
-  provider Provider @default(local)
-  googleId String?
-
-  gender    Gender    @default(male)
-  phone     String?
-  role      String    @default("USER")
-  confirm   DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  profile   Profile?
+  id                Int       @default(autoincrement()) @map("id")
+  user_id           String    @id @unique @default(cuid())
+  firstName         String
+  lastName          String
+  email             String    @unique
+  password          String?
+  gender            Gender    @default(male)
+  phone             String?
+  role              String    @default("USER")
+  confirm           DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  freezed           Boolean   @default(false)
+  freezedAt         DateTime?
+  googleId          String?
+  provider          Provider  @default(local)
+  freezedBy         String?
+  profile           Profile?
+  recipientMessages Message[] @relation("RecipientMessages")
+  senderMessages    Message[] @relation("senderMessages")
 
   @@map("User")
 }
 
 model Profile {
-  id     Int     @id @default(autoincrement()) @map("id")
-  avatar String?
-  cover  String?
-  bio    String?
+  id      Int     @id @default(autoincrement()) @map("id")
+  avatar  String?
+  cover   String?
+  bio     String?
+  user_id String  @unique @map("user_id")
+  user    User    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
 
-  user_id String @unique @default(cuid()) @map("user_id")
-  user    User   @relation(fields: [user_id], references: [user_id])
+model Message {
+  id                String            @id @default(cuid())
+  recipient_user_id String            @map("recipient_user_id")
+  sender_user_id    String?           @map("sender_user_id")
+  content           String
+  status            MessageStatus     @default(unread)
+  visibility        MessageVisibility @default(hidden)
+  createdAt         DateTime          @default(now()) @map("created_at")
+  deliveredAt       DateTime?         @map("delivered_at")
+  readAt            DateTime?         @map("read_at")
+  deletedAt         DateTime?         @map("deleted_at")
+  metadata          Json              @default("{}")
+  recipient         User              @relation("RecipientMessages", fields: [recipient_user_id], references: [user_id], onDelete: Cascade)
+  sender            User?             @relation("senderMessages", fields: [sender_user_id], references: [user_id])
+
+  @@index([recipient_user_id, createdAt(sort: Desc), id(sort: Desc)], map: "idx_msg_recipient_created")
+  @@index([status], map: "idx_msg_status")
+  @@index([deletedAt], map: "idx_msg_deleted_at")
+  @@map("messages")
 }
 
 enum Gender {
@@ -45,6 +68,16 @@ enum Gender {
 }
 
 enum Provider {
-  google
   local
+  google
+}
+
+enum MessageStatus {
+  unread
+  read
+}
+
+enum MessageVisibility {
+  visible
+  hidden
 }

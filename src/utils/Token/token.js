@@ -6,14 +6,14 @@ export const generateToken = ({ user, tokenType }) => {
       ? process.env.JWT_SECRET_ACCESS
       : process.env.JWT_SECRET_REFRESH,
     {
-      expiresIn: tokenType === "access" ? "1h" : "7d",
+      expiresIn: tokenType === "access" ? "2h" : "7d",
     }
   );
 };
 
 export const verifyToken = ({ token, tokenType = tokenTypeEnum.access }) => {
-  console.log(token);
-  
+
+
   return jwt.verify(
     token,
     tokenType === "access"

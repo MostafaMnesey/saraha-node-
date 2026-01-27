@@ -13,7 +13,7 @@ export const globalErrorHandling = (err, req, res, next) => {
   });
 };
 
-export const successResponse = ({ res, status, data, message = "success" }) => {
+export const successResponse = ({ res, status = 200, data, message = "success" }) => {
   return res.status(status).json({
     message,
     status,

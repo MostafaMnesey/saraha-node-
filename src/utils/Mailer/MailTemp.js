@@ -1,4 +1,4 @@
-export const mailTemp = ({ title = "Verify your account", otp }) => {
+export const mailTemp = ({ title = "Verify your account", otp, text }) => {
   const safeOtp = String(otp ?? "").trim();
 
   return `<!DOCTYPE html>
@@ -55,7 +55,7 @@ export const mailTemp = ({ title = "Verify your account", otp }) => {
               <h1 style="margin:0; font-size:26px; line-height:1.25; color:#0F172A; font-weight:700;">
                 ${title}
               </h1>
-
+${otp ? `
               <p style="margin:14px 0 0 0; font-size:15px; line-height:1.65; color:#475569;">
                 Use the verification code below to continue. This code is valid for <b>10 minutes</b>.
               </p>
@@ -69,7 +69,12 @@ export const mailTemp = ({ title = "Verify your account", otp }) => {
 
               <p style="margin:10px 0 0 0; font-size:13px; color:#64748B; line-height:1.6;">
                 Don’t share this code with anyone. Our team will never ask you for it.
-              </p>
+              </p>`: ""}
+              ${text ? `
+                <p style="margin:10px 0 0 0; font-size:13px; color:#64748B; line-height:1.6;">
+                ${text}
+                </p>
+                ` : ""}
 
             </td>
           </tr>
@@ -97,25 +102,22 @@ export const mailTemp = ({ title = "Verify your account", otp }) => {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
                 <tr>
                   <td style="padding:0 8px;">
-                    <a href="${
-                      process.env.facebookLink
-                    }" style="text-decoration:none;">
+                    <a href="${process.env.facebookLink
+    }" style="text-decoration:none;">
                       <img src="https://res.cloudinary.com/ddajommsw/image/upload/v1670703402/Group35062_erj5dx.png" width="40" height="40" alt="Facebook" style="display:block;">
                     </a>
                   </td>
 
                   <td style="padding:0 8px;">
-                    <a href="${
-                      process.env.instegram
-                    }" style="text-decoration:none;">
+                    <a href="${process.env.instegram
+    }" style="text-decoration:none;">
                       <img src="https://res.cloudinary.com/ddajommsw/image/upload/v1670703402/Group35063_zottpo.png" width="40" height="40" alt="Instagram" style="display:block;">
                     </a>
                   </td>
 
                   <td style="padding:0 8px;">
-                    <a href="${
-                      process.env.twitterLink
-                    }" style="text-decoration:none;">
+                    <a href="${process.env.twitterLink
+    }" style="text-decoration:none;">
                       <img src="https://res.cloudinary.com/ddajommsw/image/upload/v1670703402/Group_35064_i8qtfd.png" width="40" height="40" alt="Twitter" style="display:block;">
                     </a>
                   </td>

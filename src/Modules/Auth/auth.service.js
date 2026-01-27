@@ -20,8 +20,12 @@ export const login = asyncHandler(async (req, res, next) => {
   }
   const user = await db.findFirst({
     model: "User",
-    where: { email, provider: "local" },
+    where: {
+      email,
+      provider: "local",
+    },
   });
+
   if (!user) {
     return next(new Error("User Not Found", { cause: 404 }));
   }
@@ -65,6 +69,8 @@ export const register = asyncHandler(async (req, res, next) => {
   const hashedPassword = hashPassword({ password });
   const encryptedPhone = encryptText({ text: phone });
   const otp = generateOtp();
+  console.log(otp);
+
   const hashedOtp = hashPassword({ password: otp });
   await redis.set(`${email}_otp_register`, hashedOtp);
   await redis.expire(`${email}_otp_register`, 60 * 10);
@@ -83,6 +89,7 @@ export const register = asyncHandler(async (req, res, next) => {
       email,
       password: hashedPassword,
       gender,
+      provider: "local",
       phone: encryptedPhone,
     },
   });
@@ -95,7 +102,10 @@ export const register = asyncHandler(async (req, res, next) => {
 });
 export const forgetPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
-  const checkuser = await db.findFirst({ model: "User", where: { email } });
+  const checkuser = await db.findFirst({
+    model: "User",
+    where: { email, confirm: { not: null } },
+  });
   if (!checkuser) {
     return next(new Error("User Not Found", { cause: 404 }));
   }
@@ -150,7 +160,7 @@ export const refresh = asyncHandler(async (req, res, next) => {
 
   const user = await db.findFirst({
     model: "User",
-    where: { user_id: verify.id },
+    where: { user_id: verify.id, confirm: { not: null } },
   });
   if (!user) {
     return next(new Error("Invalid Refresh Token", { cause: 401 }));
@@ -174,6 +184,9 @@ export const refresh = asyncHandler(async (req, res, next) => {
 export const verifyCode = asyncHandler(async (req, res, next) => {
   const { email, otp } = req.body;
   const hasedOtp = await redis.get(`${email}_otp_register`);
+  if (!hasedOtp) {
+    return next(new Error("Invalid Otp", { cause: 401 }));
+  }
 
   const comparedPassword = comparePassword({ password: otp, hash: hasedOtp });
   if (!comparedPassword) {

@@ -71,3 +71,12 @@ export const restoreAccountSchema = {
     id: generalFeilds.userId.required(),
   }).required(),
 };
+
+export const userSearchSchema = {
+  query: Joi.object()
+    .keys({
+      search: generalFeilds.search.required(),
+    })
+    .required(),
+};
+

@@ -326,3 +326,36 @@ export const restoreAccount = asyncHandler(async (req, res, next) => {
     status: 200,
   });
 });
+
+
+export const searchWithName = asyncHandler(async (req, res, next) => {
+  const { search } = req.query;
+  if (!search) {
+    return next(new Error("Search is required", { cause: 400 }));
+  }
+  const users = await db.findMany({
+    model: "User",
+    where: {
+      OR: [
+        { firstName: { contains: search, mode: "insensitive" } },
+        { lastName: { contains: search, mode: "insensitive" } },
+      ],
+    },
+    select: {
+      user_id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      profile: {
+        select: {
+          avatar: true,
+        },
+      },
+    },
+  });
+  return successResponse({
+    res,
+    status: 200,
+    data: { users },
+  })
+})

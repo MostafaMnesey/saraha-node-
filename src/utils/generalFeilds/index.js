@@ -27,4 +27,5 @@ export const generalFeilds = {
     "string.min": "Bio must be at least {#limit} characters",
     "string.max": "Bio must be at most {#limit} characters",
   }),
+  search: Joi.string().max(32),
 };

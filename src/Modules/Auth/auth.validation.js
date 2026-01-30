@@ -51,6 +51,13 @@ export const forgetPasswordSchema = {
     })
     .required(),
 };
+export const resendOtpSchema = {
+  body: Joi.object()
+    .keys({
+      email: generalFeilds.email.required(),
+    })
+    .required(),
+};
 export const resetPasswordSchema = {
   body: Joi.object()
     .keys({

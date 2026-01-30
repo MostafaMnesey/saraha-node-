@@ -199,6 +199,25 @@ export const verifyCode = asyncHandler(async (req, res, next) => {
     message: "Otp Verified is correct",
   });
 });
+export const resendOtp = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+  const otp = generateOtp();
+  const hashedOtp = hashPassword({ password: otp });
+  await redis.set(`${email}_otp_register`, hashedOtp);
+  await redis.expire(`${email}_otp_register`, 60 * 10);
+  const mail = sendEmailEvent.emit("sendEmail", { email, otp });
+  if (!mail) {
+    return next(
+      new Error("Failed to send email, please try again", { cause: 500 })
+    );
+  }
+
+  return successResponse({
+    res,
+    status: 200,
+    message: "Otp Sent Successfully, Please Check Your Email",
+  });
+});
 export const verifyAccount = asyncHandler(async (req, res, next) => {
   const { email, otp } = req.body;
   const hasedOtp = await redis.get(`${email}_otp_register`);

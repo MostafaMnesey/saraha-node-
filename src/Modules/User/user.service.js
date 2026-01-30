@@ -21,26 +21,29 @@ export const getUser = asyncHandler(async (req, res, next) => {
     },
   });
   user.phone = phone;
+  if (!profile) {
+    return next(new Error("Profile is not found for this user ", { cause: 404 }))
+  }
   return successResponse({
     res,
     status: 200,
     data: {
-      user_id: user.user_id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      provider: user.provider,
-      gender: user.gender,
-      phone: user.phone,
-      role: user.role,
-      confirm: user.confirm,
-      createdAt: user.createdAt,
+      user_id: user?.user_id,
+      firstName: user?.firstName,
+      lastName: user?.lastName,
+      email: user?.email,
+      provider: user?.provider,
+      gender: user?.gender,
+      phone: user?.phone,
+      role: user?.role,
+      confirm: user?.confirm,
+      createdAt: user?.createdAt,
 
       profile: {
-        avatar: profile.avatar,
-        cover: profile.cover,
-        bio: profile.bio,
-        user_id: profile.user_id,
+        avatar: profile?.avatar || "",
+        cover: profile?.cover || "",
+        bio: profile?.bio || "",
+        user_id: profile?.user_id || "",
       },
     },
   });
